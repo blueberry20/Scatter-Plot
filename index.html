@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+  	<!-- <script src="https://d3js.org/d3.v5.min.js"></script> -->
+  	<script src="d3.min.js"></script>
+  	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet">
+  	<style>
+		body {
+			font-family: "Roboto", sans-serif;
+			color: #43468d;
+			padding:4em;
+		}
+
+		h1 {
+			font-family: "Roboto", sans-serif;
+			font-weight:300;
+			color: #43468d;
+		}
+
+		.grid line {
+			stroke: green;
+			shape-rendering: crispEdges;
+			fill:none;
+		}
+
+		.main text {
+		    font-size: 12px;
+		    font-family: "Roboto", sans-serif;	
+		    font-weight:300;
+		    stroke:#6a7296;
+		}
+
+		.tick line {
+		  	stroke: lightgrey;
+		  	stroke-opacity: 0.7;
+		  	shape-rendering: crispEdges;
+		}
+
+		.domain {
+			stroke:#6a7296;
+		}
+	</style>
+  </head>
+  <body>
+  	<h1>Scatter Plot</h1>
+  	<script>
+
+  		var xdata = [];
+  		var ydata = [];
+  		var dataset =[];
+
+  		d3.csv('data.csv')
+	  	.then(function(data) {
+	      // data is now whole data set
+	      // draw chart in here!
+	      //console.log(data);
+			data.map(function(item){
+				if (item.group == "I"){
+					xdata.push(+item["x"]);
+					ydata.push(+item["y"]);
+				}
+		    })
+	  	})
+	  	.then(function(){
+	  		createChart();
+	  	});
+
+
+		function createChart(){
+			//console.log(xdata);
+			//console.log(ydata);
+			// size and margins for the chart
+			var margin = {top: 20, right: 15, bottom: 60, left: 60};
+			var width = 960 - margin.left - margin.right;
+			var height = 500 - margin.top - margin.bottom;
+
+			// x and y scales, I've used linear here but there are other options
+			// the scales translate data values to pixel values for you
+			var x = d3.scaleLinear()
+			          .domain([0, d3.max(xdata)])  // the range of the values to plot
+			          .range([ 0, width ]);        // the pixel range of the x-axis
+
+			var y = d3.scaleLinear()
+			          .domain([0, d3.max(ydata)])
+			          .range([ height, 0 ]);
+
+			// the chart object, includes all margins
+			var chart = d3.select('body')
+			.append('svg:svg')
+			.attr('width', width + margin.right + margin.left)
+			.attr('height', height + margin.top + margin.bottom)
+			.attr('class', 'chart')
+
+			// the main object where the chart and axis will be drawn
+			var main = chart.append('g')
+			.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+			.attr('width', width)
+			.attr('height', height)
+			.attr('class', 'main')   
+
+			// draw the x axis
+			var tickNumber = xdata.length/2;
+			var xAxis = d3.axisBottom()
+			.scale(x)
+			.ticks(tickNumber)
+			.tickSize(0);
+
+			main.append('g')
+			.attr('transform', 'translate(0,' + height + ')')
+			.attr('class', 'axis')
+			.call(xAxis)
+			.attr("stroke", "#6a7296");
+
+			// text label for the x axis
+			main.append("text")      
+	        .attr("x", width/2 )
+	        .attr("y",  height + margin.bottom)
+	        .style("text-anchor", "middle")
+	        .text("Axis X")
+	        .style("fill", "#6a7296");
+
+			// draw the y axis
+			var yAxis = d3.axisLeft()
+			.scale(y)
+			.tickSize(0);
+
+			// text label for the y axis
+			main.append("text")
+	        .attr("transform", "rotate(-90)")
+	        .attr("y", 0 - margin.left)
+	        .attr("x", 0- (height / 2))
+	        .attr("dy", "1em")
+	        .style("text-anchor", "middle")
+	        .text("Axis Y")
+	        .style("fill", "#6a7296");
+
+			main.append('g')
+			.attr('transform', 'translate(0,0)')
+			.attr('class', 'axis')
+			.call(yAxis)
+			.attr("stroke", "#6a7296");
+
+			// gridlines in y axis function
+			function make_y_gridlines() {		
+			    return d3.axisLeft(y)
+			        
+			}
+
+			//add div on hover
+		    var tip = d3.select('body')
+		      .append('div')
+		      .attr('class', 'tip')
+		      .html('I am a tooltip...')
+		      .style('border', '1px solid steelblue')
+		      .style('padding', '5px')
+		      .style('position', 'absolute')
+		      .style('display', 'none')
+		      .on('mouseover', function(d, i) {
+		        tip.transition().duration(0);
+		      })
+		      .on('mouseout', function(d, i) {
+		        tip.style('display', 'none');
+		      });
+
+			// draw the graph object
+			var g = main.append("svg:g"); 
+
+			g.selectAll("scatter-dots")
+			  .data(ydata)  // using the values in the ydata array
+			  .enter().append("svg:circle")  // create a new circle for each value
+			      .attr("cy", function (d) { return y(d); } ) // translate y value to a pixel
+			      .attr("cx", function (d,i) { return x(xdata[i]); } ) // translate x value
+			      .attr("r", 7) // radius of circle
+			      .style("fill", "#bfd654")
+			      .on('mouseover', function(d, i) {
+			         tip.transition().duration(0);
+			         tip.style('top', y(d.y) - 20 + 'px');
+			         tip.style('left', x(d.x) + 'px');
+			         tip.style('display', 'block');
+			      })
+			      .on('mouseout', function(d, i) {
+			         tip.transition()
+			         .delay(500)
+			         .style('display', 'none');
+			      })	
+		}
+  	</script>
+  </body>
+ </html>
