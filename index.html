@@ -40,150 +40,212 @@
 		.domain {
 			stroke:#6a7296;
 		}
+
+		.tooltip {	
+		    position: absolute;			
+		    text-align: center;			
+		    width: 50px;										
+		    padding: 0 15px 15px;				
+		    font-size: 12px;		
+		    border: 1px solid #bfd654;				
+		    pointer-events: none;	
+		    text-align:left;	
+		    color:#000;	
+		    background-color:#fff;
+		}
+
+		.tooltip p {
+			color: #bfd654;
+			margin:15px 0 10px;
+			font-size:10px;
+		}
+
+		circle {
+			-webkit-transition: opacity 0.5s; /* Safari */
+    		transition: opacity 0.5s;
+    		opacity:1;
+		}
+
+		.notVisible {
+			opacity: 0;
+		}
+		.visible {
+			opacity:1;
+		}
 	</style>
   </head>
   <body>
   	<h1>Scatter Plot</h1>
+  	<select id="groupSelect" onchange="changeGroup()">
+  		<option value="I">Group I</option>
+  		<option value="II">Group II</option>
+  		<option value="III">Group III</option>
+  		<option value="IV">Group IV</option>
+  	</select>
   	<script>
-
   		var xdata = [];
   		var ydata = [];
-  		var dataset =[];
+  		var currentxdata = [];
+  		var currentydata = [];
 
   		d3.csv('data.csv')
 	  	.then(function(data) {
-	      // data is now whole data set
-	      // draw chart in here!
-	      //console.log(data);
 			data.map(function(item){
+				//get x and y values from all groups
+				xdata.push(+item["x"]);
+				ydata.push(+item["y"]);
+
+				//get x and y values for currentGroup
 				if (item.group == "I"){
-					xdata.push(+item["x"]);
-					ydata.push(+item["y"]);
+					currentxdata.push(+item["x"]);
+					currentydata.push(+item["y"]);
 				}
 		    })
 	  	})
 	  	.then(function(){
 	  		createChart();
 	  	});
+	  	// .then(function(){
+	  	// 	createScatterDots();
+	  	// });
+
+  		function changeGroup (){
+  			var selectedGroup = document.getElementById("groupSelect").value;
+			d3.selectAll('circle').classed('notVisible', true);
+			setTimeout(function(){
+				d3.selectAll('circle').remove();
+			}, 500)
+			// setTimeout(function(){
+			// 	d3.selectAll('circle').classed('notVisible', false);
+			// }, 1000)
+
+			currentydata = [];
+			currentxdata = [];
+			d3.csv('data.csv')
+		  	.then(function(data) {
+				data.map(function(item){
+					if (item.group == selectedGroup){
+						currentxdata.push(+item["x"]);
+						currentydata.push(+item["y"]);
+					}
+			    })
+		  	})
+		  	.then(function(){
+		  		createScatterDots();
+		  	});
+  		}
 
 
-		function createChart(){
-			//console.log(xdata);
-			//console.log(ydata);
-			// size and margins for the chart
-			var margin = {top: 20, right: 15, bottom: 60, left: 60};
-			var width = 960 - margin.left - margin.right;
-			var height = 500 - margin.top - margin.bottom;
+  		// size and margins for the chart
+		var margin = {top: 20, right: 15, bottom: 60, left: 60};
+		var width = 960 - margin.left - margin.right;
+		var height = 500 - margin.top - margin.bottom;
 
-			// x and y scales, I've used linear here but there are other options
-			// the scales translate data values to pixel values for you
-			var x = d3.scaleLinear()
-			          .domain([0, d3.max(xdata)])  // the range of the values to plot
-			          .range([ 0, width ]);        // the pixel range of the x-axis
+		// the chart object, includes all margins
+		var chart = d3.select('body')
+		.append('svg:svg')
+		.attr('width', width + margin.right + margin.left)
+		.attr('height', height + margin.top + margin.bottom)
+		.attr('class', 'chart')
 
-			var y = d3.scaleLinear()
-			          .domain([0, d3.max(ydata)])
-			          .range([ height, 0 ]);
+		// the main object where the chart and axis will be drawn
+		var main = chart.append('g')
+		.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+		.attr('width', width)
+		.attr('height', height)
+		.attr('class', 'main')  
 
-			// the chart object, includes all margins
-			var chart = d3.select('body')
-			.append('svg:svg')
-			.attr('width', width + margin.right + margin.left)
-			.attr('height', height + margin.top + margin.bottom)
-			.attr('class', 'chart')
+  		function createChart(){
 
-			// the main object where the chart and axis will be drawn
-			var main = chart.append('g')
-			.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-			.attr('width', width)
-			.attr('height', height)
-			.attr('class', 'main')   
+		// x and y scales, I've used linear here but there are other options
+		// the scales translate data values to pixel values for you
+		var x = d3.scaleLinear()
+		          .domain([0, d3.max(xdata)])  // the range of the values to plot
+		          .range([ 0, width ]);        // the pixel range of the x-axis
 
-			// draw the x axis
-			var tickNumber = xdata.length/2;
-			var xAxis = d3.axisBottom()
-			.scale(x)
-			.ticks(tickNumber)
-			.tickSize(0);
+		var y = d3.scaleLinear()
+		          .domain([0, d3.max(ydata)])
+		          .range([ height, 0 ]); 
 
-			main.append('g')
-			.attr('transform', 'translate(0,' + height + ')')
-			.attr('class', 'axis')
-			.call(xAxis)
-			.attr("stroke", "#6a7296");
+		// draw the x axis
+		var tickNumber = xdata.length/2;
+		var xAxis = d3.axisBottom()
+		.scale(x)
+		.ticks(tickNumber)
+		.tickSize(0)
+		.tickPadding("10");
 
-			// text label for the x axis
-			main.append("text")      
-	        .attr("x", width/2 )
-	        .attr("y",  height + margin.bottom)
-	        .style("text-anchor", "middle")
-	        .text("Axis X")
-	        .style("fill", "#6a7296");
+		main.append('g')
+		.attr('transform', 'translate(0,' + height + ')')
+		.attr('class', 'axis')
+		.call(xAxis)
+		.attr("stroke", "#6a7296");
 
-			// draw the y axis
-			var yAxis = d3.axisLeft()
-			.scale(y)
-			.tickSize(0);
+		// text label for the x axis
+		main.append("text")      
+        .attr("x", width/2 )
+        .attr("y",  height + margin.bottom)
+        .style("text-anchor", "middle")
+        .text("Axis X")
+        .style("fill", "#6a7296");
 
-			// text label for the y axis
-			main.append("text")
-	        .attr("transform", "rotate(-90)")
-	        .attr("y", 0 - margin.left)
-	        .attr("x", 0- (height / 2))
-	        .attr("dy", "1em")
-	        .style("text-anchor", "middle")
-	        .text("Axis Y")
-	        .style("fill", "#6a7296");
+		// draw the y axis
+		var yAxis = d3.axisLeft()
+		.scale(y)
+		.tickSize(0)
+		.tickPadding("10");
 
-			main.append('g')
-			.attr('transform', 'translate(0,0)')
-			.attr('class', 'axis')
-			.call(yAxis)
-			.attr("stroke", "#6a7296");
+		// text label for the y axis
+		main.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x", 0- (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Axis Y")
+        .style("fill", "#6a7296");
 
-			// gridlines in y axis function
-			function make_y_gridlines() {		
-			    return d3.axisLeft(y)
-			        
-			}
+		main.append('g')
+		.attr('transform', 'translate(0,0)')
+		.attr('class', 'axis')
+		.call(yAxis)
+		.attr("stroke", "#6a7296");
 
-			//add div on hover
-		    var tip = d3.select('body')
-		      .append('div')
-		      .attr('class', 'tip')
-		      .html('I am a tooltip...')
-		      .style('border', '1px solid steelblue')
-		      .style('padding', '5px')
-		      .style('position', 'absolute')
-		      .style('display', 'none')
-		      .on('mouseover', function(d, i) {
-		        tip.transition().duration(0);
-		      })
-		      .on('mouseout', function(d, i) {
-		        tip.style('display', 'none');
-		      });
 
+	    // Define the div for the tooltip
+		var div = d3.select("body").append("div")	
+		    .attr("class", "tooltip")				
+		    .style("opacity", 0);
+
+		    createScatterDots(x,y)
+
+		}
+
+
+		function createScatterDots(x,y){
 			// draw the graph object
 			var g = main.append("svg:g"); 
 
 			g.selectAll("scatter-dots")
-			  .data(ydata)  // using the values in the ydata array
-			  .enter().append("svg:circle")  // create a new circle for each value
-			      .attr("cy", function (d) { return y(d); } ) // translate y value to a pixel
-			      .attr("cx", function (d,i) { return x(xdata[i]); } ) // translate x value
-			      .attr("r", 7) // radius of circle
-			      .style("fill", "#bfd654")
-			      .on('mouseover', function(d, i) {
-			         tip.transition().duration(0);
-			         tip.style('top', y(d.y) - 20 + 'px');
-			         tip.style('left', x(d.x) + 'px');
-			         tip.style('display', 'block');
-			      })
-			      .on('mouseout', function(d, i) {
-			         tip.transition()
-			         .delay(500)
-			         .style('display', 'none');
-			      })	
+			   .data(currentydata)  // using the values in the ydata array
+			   .enter().append("svg:circle")  // create a new circle for each value
+			      	.attr("cy", function (d) { return y(d); } ) // translate y value to a pixel
+			      	.attr("cx", function (d,i) { return x(currentxdata[i]); } ) // translate x value
+			      	.attr("r", 7) // radius of circle
+			      	.style("fill", "#bfd654")
+					.on("mouseover", function(d,i) {	
+			            div.transition()		
+			                .duration(200)		
+			                .style("opacity", .9);		
+			            div.html("<p>X-value</p> "+ currentxdata[i] + "<p>Y-value</p> " + d)	
+			                .style("left", (d3.event.pageX) + "px")		
+			                .style("top", (d3.event.pageY - 28) + "px");	
+			            })					
+			        .on("mouseout", function(d) {		
+			            div.transition()		
+			                .duration(500)		
+			                .style("opacity", 0);	
+			        });	
 		}
   	</script>
   </body>
