@@ -4,10 +4,11 @@
 
   	<!-- <script src="https://d3js.org/d3.v5.min.js"></script> -->
   	<script src="d3.min.js"></script>
-  	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet">
+  	<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700" rel="stylesheet">
   	<style>
 		body {
 			font-family: "Roboto", sans-serif;
+			font-weight:300;
 			color: #43468d;
 			padding:4em;
 		}
@@ -16,30 +17,24 @@
 			font-family: "Roboto", sans-serif;
 			font-weight:300;
 			color: #43468d;
+			margin-top:0;
 		}
 
 		.grid line {
-			stroke: green;
+			stroke: #edeef1;
 			shape-rendering: crispEdges;
 			fill:none;
 		}
 
 		.main text {
-		    font-size: 12px;
-		    font-family: "Roboto", sans-serif;	
+		    font-size: 10px;
 		    font-weight:300;
-		    stroke:#6a7296;
 		}
 
 		.tick line {
-		  	stroke: lightgrey;
-		  	stroke-opacity: 0.7;
 		  	shape-rendering: crispEdges;
 		}
 
-		.domain {
-			stroke:#6a7296;
-		}
 
 		.tooltip {	
 		    position: absolute;			
@@ -60,6 +55,10 @@
 			font-size:10px;
 		}
 
+		.domain {
+			stroke:#6a7296;
+		}
+
 		circle {
 			-webkit-transition: opacity 0.5s; /* Safari */
     		transition: opacity 0.5s;
@@ -69,19 +68,61 @@
 		.notVisible {
 			opacity: 0;
 		}
+
 		.visible {
 			opacity:1;
 		}
+
+		.flex {
+			display: flex;
+			align-items: center;
+		}
+
+		.flex div {
+			font-size:10px;
+			font-weight:400;
+			padding-right: 20px;
+		}
+
+		select {
+			-webkit-appearance: none;
+  			-webkit-border-radius: 0px;
+  			width:150px;
+  			height:30px;
+  			line-height: 30px;
+  			border:1px solid #edeef1;
+  			color:#6a7296;
+  			padding: 0 10px;
+    		background-color: #fff;
+    		font-weight:300;
+    		background: url("arrow.png") no-repeat right #fff;
+    		background-size:15px;
+    		background-position-x: 120px;
+		}
+
+		option {
+			height:30px;
+			background-color:#fff;
+			padding:10px;
+		}
+
+
 	</style>
   </head>
   <body>
   	<h1>Scatter Plot</h1>
-  	<select id="groupSelect" onchange="changeGroup()">
-  		<option value="I">Group I</option>
-  		<option value="II">Group II</option>
-  		<option value="III">Group III</option>
-  		<option value="IV">Group IV</option>
-  	</select>
+  	<div class="flex">
+  		<div>Select Group</div>
+  		<div class="custom-select">
+	  	<select id="groupSelect" onchange="changeGroup()">
+	  		<option value="I">Group I</option>
+	  		<option value="II">Group II</option>
+	  		<option value="III">Group III</option>
+	  		<option value="IV">Group IV</option>
+	  	</select>
+	  </div>
+  	</div>
+  	<div id="chartDiv"></div>
   	<script>
   		var xdata = [];
   		var ydata = [];
@@ -95,7 +136,7 @@
 				xdata.push(+item["x"]);
 				ydata.push(+item["y"]);
 
-				//get x and y values for currentGroup
+				//get x and y values for current Group
 				if (item.group == "I"){
 					currentxdata.push(+item["x"]);
 					currentydata.push(+item["y"]);
@@ -105,22 +146,20 @@
 	  	.then(function(){
 	  		createChart();
 	  	});
-	  	// .then(function(){
-	  	// 	createScatterDots();
-	  	// });
 
   		function changeGroup (){
   			var selectedGroup = document.getElementById("groupSelect").value;
+  			//transition opacity of circles
 			d3.selectAll('circle').classed('notVisible', true);
 			setTimeout(function(){
 				d3.selectAll('circle').remove();
 			}, 500)
-			// setTimeout(function(){
-			// 	d3.selectAll('circle').classed('notVisible', false);
-			// }, 1000)
 
+			//clear current x and y data
 			currentydata = [];
 			currentxdata = [];
+
+			//load data for currently selected group
 			d3.csv('data.csv')
 		  	.then(function(data) {
 				data.map(function(item){
@@ -131,7 +170,9 @@
 			    })
 		  	})
 		  	.then(function(){
-		  		createScatterDots();
+		  		setTimeout(function(){
+					createChart();
+				}, 500)		  		
 		  	});
   		}
 
@@ -142,89 +183,99 @@
 		var height = 500 - margin.top - margin.bottom;
 
 		// the chart object, includes all margins
-		var chart = d3.select('body')
-		.append('svg:svg')
-		.attr('width', width + margin.right + margin.left)
-		.attr('height', height + margin.top + margin.bottom)
-		.attr('class', 'chart')
+		var chart = d3.select('#chartDiv')
+			.append('svg:svg')
+			.attr('width', width + margin.right + margin.left)
+			.attr('height', height + margin.top + margin.bottom)
+			.attr('class', 'chart');
 
 		// the main object where the chart and axis will be drawn
 		var main = chart.append('g')
-		.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-		.attr('width', width)
-		.attr('height', height)
-		.attr('class', 'main')  
+			.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+			.attr('width', width)
+			.attr('height', height)
+			.attr('class', 'main')  
 
   		function createChart(){
 
-		// x and y scales, I've used linear here but there are other options
-		// the scales translate data values to pixel values for you
-		var x = d3.scaleLinear()
-		          .domain([0, d3.max(xdata)])  // the range of the values to plot
-		          .range([ 0, width ]);        // the pixel range of the x-axis
+			var xtickNumber = d3.max(xdata)/2;
+			// x and y scales, I've used linear here but there are other options
+			// the scales translate data values to pixel values for you
+			var x = d3.scaleLinear()
+			          .domain([0, d3.max(xdata)])  // the range of the values to plot
+			          .range([ 0, width ]);        // the pixel range of the x-axis
 
-		var y = d3.scaleLinear()
-		          .domain([0, d3.max(ydata)])
-		          .range([ height, 0 ]); 
+			var y = d3.scaleLinear()
+			          .domain([0, d3.max(ydata)])
+			          .range([ height, 0 ]); 
 
-		// draw the x axis
-		var tickNumber = xdata.length/2;
-		var xAxis = d3.axisBottom()
-		.scale(x)
-		.ticks(tickNumber)
-		.tickSize(0)
-		.tickPadding("10");
+			// draw the x axis			
+			var xAxis = d3.axisBottom()
+				.scale(x)
+				.ticks(xtickNumber)
+				.tickSize(0)
+				.tickPadding("10");
 
-		main.append('g')
-		.attr('transform', 'translate(0,' + height + ')')
-		.attr('class', 'axis')
-		.call(xAxis)
-		.attr("stroke", "#6a7296");
+			main.append('g')
+				.attr('transform', 'translate(0,' + height + ')')
+				.attr('class', 'axis')
+				.call(xAxis);
 
-		// text label for the x axis
-		main.append("text")      
-        .attr("x", width/2 )
-        .attr("y",  height + margin.bottom)
-        .style("text-anchor", "middle")
-        .text("Axis X")
-        .style("fill", "#6a7296");
+			// draw the y axis
+			var yAxis = d3.axisLeft()
+				.scale(y)
+				.tickSize(0)
+				.tickPadding("10");
 
-		// draw the y axis
-		var yAxis = d3.axisLeft()
-		.scale(y)
-		.tickSize(0)
-		.tickPadding("10");
+			main.append('g')
+				.attr('transform', 'translate(0,0)')
+				.attr('class', 'axis')
+				.call(yAxis)
+				.attr("stroke", "#6a7296");
 
-		// text label for the y axis
-		main.append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 0 - margin.left)
-        .attr("x", 0- (height / 2))
-        .attr("dy", "1em")
-        .style("text-anchor", "middle")
-        .text("Axis Y")
-        .style("fill", "#6a7296");
+			// text label for the x axis
+			main.append("text")      
+		        .attr("x", width/2 )
+		        .attr("y",  height + 40)
+		        .style("text-anchor", "middle")
+		        .text("Axis X")
+		        .style("fill", "#6a7296");
 
-		main.append('g')
-		.attr('transform', 'translate(0,0)')
-		.attr('class', 'axis')
-		.call(yAxis)
-		.attr("stroke", "#6a7296");
+			// text label for the y axis
+			main.append("text")
+		        .attr("transform", "rotate(-90)")
+		        .attr("y", 0 - 40)
+		        .attr("x", 0- (height / 2))
+		        .attr("dy", "1em")
+		        .style("text-anchor", "middle")
+		        .text("Axis Y")
+		        .style("fill", "#6a7296");
 
+		 //    var yAxisGr = d3.axisRight()
+			// 	.scale(y)
+			// 	.tickSize(width)
+			// 	.tickFormat("");
 
-	    // Define the div for the tooltip
-		var div = d3.select("body").append("div")	
-		    .attr("class", "tooltip")				
-		    .style("opacity", 0);
+			// main.append("g")
+			//     .classed('grid', true)
+			//     .call(yAxisGr);
 
+			//document.querySelector(".grid .tick line").style.stroke = "#6a7296";
+		
 		    createScatterDots(x,y)
-
 		}
 
 
 		function createScatterDots(x,y){
+			d3.selectAll('circle').classed('notVisible', false);
 			// draw the graph object
 			var g = main.append("svg:g"); 
+
+
+		    // Define the div for the tooltip
+			var div = d3.select("body").append("div")	
+			    .attr("class", "tooltip")				
+			    .style("opacity", 0);
 
 			g.selectAll("scatter-dots")
 			   .data(currentydata)  // using the values in the ydata array
