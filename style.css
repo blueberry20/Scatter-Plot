@@ -6,7 +6,6 @@ body {
 }
 
 h1 {
-	font-family: "Roboto", sans-serif;
 	font-weight:300;
 	color: #43468d;
 	margin-top:0;
@@ -26,6 +25,11 @@ h1 {
 
 .tick line {
   	shape-rendering: crispEdges;
+  	stroke:#43468d;
+}
+
+.tick text {
+	fill: #43468d;
 }
 
 
