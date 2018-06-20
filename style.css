@@ -1,0 +1,101 @@
+body {
+	font-family: "Roboto", sans-serif;
+	font-weight:300;
+	color: #43468d;
+	padding:4em;
+}
+
+h1 {
+	font-family: "Roboto", sans-serif;
+	font-weight:300;
+	color: #43468d;
+	margin-top:0;
+	margin-left:2em;
+}
+
+.grid line {
+	stroke: #edeef1;
+	shape-rendering: crispEdges;
+	fill:none;
+}
+
+.main text {
+    font-size: 10px;
+    font-weight:300;
+}
+
+.tick line {
+  	shape-rendering: crispEdges;
+}
+
+
+.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 50px;										
+    padding: 0 15px 15px;				
+    font-size: 12px;		
+    border: 1px solid #bfd654;				
+    pointer-events: none;	
+    text-align:left;	
+    color:#000;	
+    background-color:#fff;
+}
+
+.tooltip p {
+	color: #bfd654;
+	margin:15px 0 10px;
+	font-size:10px;
+}
+
+.domain {
+	stroke:#6a7296;
+}
+
+circle {
+	-webkit-transition: opacity 0.5s; /* Safari */
+	transition: opacity 0.5s;
+	opacity:1;
+}
+
+.notVisible {
+	opacity: 0;
+}
+
+.visible {
+	opacity:1;
+}
+
+.flex {
+	display: flex;
+	align-items: center;
+	margin:0 0 1em 4em;
+}
+
+.flex div {
+	font-size:10px;
+	font-weight:400;
+	padding-right: 20px;
+}
+
+select {
+	-webkit-appearance: none;
+	-webkit-border-radius: 0px;
+	width:150px;
+	height:30px;
+	line-height: 30px;
+	border:1px solid #edeef1;
+	color:#6a7296;
+	padding: 0 10px;
+	background-color: #fff;
+	font-weight:300;
+	background: url("arrow.png") no-repeat right #fff;
+	background-size:15px;
+	background-position-x: 120px;
+}
+
+option {
+	height:30px;
+	background-color:#fff;
+	padding:10px;
+}
